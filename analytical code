@@ -1,0 +1,2327 @@
+*** CODE FOR ANALYSES AFTER ALL DATASETS HAVE BEEN MERGED ***
+
+global project "S:\CLS_DAC_MCS\DAC-174\data"
+global output "S:\CLS_DAC_MCS\DAC-174\data\analyses output"
+
+clear all
+set maxvar 100000
+set more off
+
+use "$project\YEF_MCSID_analytical_sample_crimevariables_IMD_ACEs_PCEs_ADJUSTED.dta", clear
+
+//use "$project\YEF_MCSID_analytical_sample_crimevariables_IMD_ACEs_PCEs.dta", clear
+//use "$project\YEF_data__MI(30)_v8.1 (adjusted) ENGWALES.dta", clear
+
+*survey weight setting
+mi svyset SPTN00 [pweight=AOVWT1], strata(PTTYPE2) fpc(NH2)
+
+*****************************************************************************
+
+
+
+*---------------------------------------------------------*
+***MISSING DATA ANALYSES
+use "$project\YEF_data__MI(30)_v8.1.dta (adjusted) ENGWALES", clear
+
+fre assault1417 weapon1417 gangever1417
+
+cap drop N14089mis
+gen N14089mis=0
+replace N14089mis=1 if assault1417==.| weapon1417==.| gangever1417==.
+fre N14089mis
+
+cap drop INCEQ1_100
+gen INCEQ1_100=INCEQ1/100
+sum INCEQ1_100
+
+foreach X in male i.ETHCM5 ib4.agemb_cat8 singpa9m INCEQ1_100 i.EDUH i.SECH5 nuisance11 graf11 vandal11 shoplift11 nuisance14 graffiti14 vandal14 shoplift14 theft14 graf17 vandal17 shoplift17 conduct2 conduct3 conduct4 conduct5 conduct6 conduct7  {
+logistic N14089mis `X'	
+outreg2 using "$output\missingness.xls", eform stats(coef ci) cttop(OR) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append nocons
+}
+
+
+
+use "C:\Users\aase_\OneDrive - University College London\05 UCL\6.0-MCS\MCS data files\Original\mcs_longitudinal_family_file.dta", clear
+fre SENTRY COUNTRY
+fre NOCMHH
+keep if SENTRY==1 & (COUNTRY==1|COUNTRY==2) & NOCMHH==1
+//N=14,098
+//before imputation we drop some missing ethnicities so we end up with 14,089
+
+
+use "$project\YEF_combined_data_raw.dta", clear
+keep if acountry==1|acountry==2
+fre GELIG00
+
+*---------------------------------------------------------*
+
+
+
+
+
+
+*----------------------------------------------------------------------------*
+use "$project\YEF_MCSID_analytical_sample_crimevariables_IMD_ACEs_PCEs_ADJUSTED.dta", clear
+
+
+***OUTCOME VARIABLES 
+fre assault14 assault17 weapon14 weapon17 gangever14 gangever17
+fre assault1417 weapon1417 gangever1417
+
+
+***ACEs
+
+*items: 
+fre singpa9m singpa3 singpa5 singpa7 singpa11
+fre parsplit9m_3y parsplit3y_5y parsplit5y_7y parsplit7y_11y
+fre domesticm9m domesticp9m domesticm3 domesticp3 domesticm5 domesticp5 domesticm7 domesticp7 domesticm11 domesticp11
+fre Rsmack3 Rsmack5 Rsmack7 Rshout3 Rshout5 Rshout7 Rscoldm3 Rphysicalm3
+fre Ralcprobm9m Ralcprobp9m Ralcprobm3 Ralcprobp3 Ralcprobm11 Ralcprobp11 
+fre Rdrugm3 Rdrugp3 Rdrugm5 Rdrugp5
+fre MALMclin kesslerm3clin kesslerm5clin kesslerm7clin kesslerm11clin kesslerp3clin kesslerp5clin kesslerp7clin kesslerp11clin 
+fre unhappymp9m unhappymp3 unhappymp5 unhappymp7 unhappymp11 //don't use this
+fre poorrelmp9m poorrelmp3 poorrelmp5 //we use this instead
+fre cprelm3_poor cprelp3_poor
+fre Rdisabm9m Rdisabp9m Rdisabm5 Rdisabp5 Rdisabm7 Rdisabp7 Rdisabm11 Rdisabp11 
+fre carer11
+
+*domains: 
+fre single_domain
+fre divorce_domain
+fre domviolence_domain domviolenceM_domain domviolenceP_domain
+fre verbal_domain verbalM_domain physical_domain physicalM_domain
+fre alcohol_domain alcoholM_domain alcoholP_domain
+fre drugs_domain drugsM_domain drugsP_domain
+fre mentalhealth_domain mentalhealthM_domain mentalhealthP_domain
+fre unhappy_domain //don't use
+fre poorrel_domain //use this instead
+fre parentchild_domain motherchild_domain fatherchild_domain
+fre disability_domain disabilityM_domain disabilityP_domain
+fre youngcarer_domain
+      
+*items and domains	
+singpa9m singpa3 singpa5 singpa7 singpa11 single_domain
+
+parsplit9m_3y parsplit3y_5y parsplit5y_7y parsplit7y_11y divorce_domain
+
+domesticm9m domesticp9m domesticm3 domesticp3 domesticm5 domesticp5 domesticm7 domesticp7 domesticm11 domesticp11 domviolence_domain domviolenceM_domain domviolenceP_domain
+
+Rshout3 Rshout5 Rshout7 Rscoldm3 verbal_domain verbalM_domain 
+
+Rsmack3 Rsmack5 Rsmack7 Rphysicalm3 physical_domain physicalM_domain
+
+Ralcprobm9m Ralcprobp9m Ralcprobm3 Ralcprobp3 Ralcprobm11 Ralcprobp11 alcohol_domain alcoholM_domain alcoholP_domain
+
+Rdrugm3 Rdrugp3 Rdrugm5 Rdrugp5 drugs_domain drugsM_domain drugsP_domain
+
+MALMclin kesslerm3clin kesslerm5clin kesslerm7clin kesslerm11clin kesslerp3clin kesslerp5clin kesslerp7clin kesslerp11clin mentalhealth_domain mentalhealthM_domain mentalhealthP_domain
+
+unhappymp9m unhappymp3 unhappymp5 unhappymp7 unhappymp11 unhappy_domain //don't use this
+
+poorrelmp9m poorrelmp3 poorrelmp5 poorrelmp9m poorrelmp3 poorrelmp5 //we use this instead
+
+cprelm3_poor cprelp3_poor parentchild_domain motherchild_domain fatherchild_domain
+
+Rdisabm9m Rdisabp9m Rdisabm5 Rdisabp5 Rdisabm7 Rdisabp7 Rdisabm11 Rdisabp11 disability_domain disabilityM_domain disabilityP_domain
+
+carer11
+   
+*cumulative: [to be decided based on preliminary regression results below]
+
+
+
+***PCEs
+*items: 
+fre childcareformalAge3 
+fre peersmoke11_none peerdrink11_none
+fre pospeer7 pospeer11
+fre schoolconnect7_high schoolconnect11_high 
+fre teacherchild11_good
+fre clubsport11_high artscrafts11_high reading11_high
+fre neighsafe3_safe neighsafe5_safe neighsafe11_safe
+fre schoolsafe7_safe
+
+*domains: 
+fre childcareformalAge3
+fre peerslowrisk11
+fre pospeer711
+fre schoolconnect711_high
+fre teacherchild11_good
+fre activities11_high
+fre neighsafe3511
+fre schoolsafe7_safe
+
+*items and domains
+childcareformalAge3 
+peersmoke11_none peerdrink11_none peerslowrisk11
+pospeer7 pospeer11 pospeer711
+schoolconnect7_high schoolconnect11_high 
+teacherchild11_good
+clubsport11_high artscrafts11_high reading11_high activities11_high
+neighsafe3_safe neighsafe5_safe neighsafe11_safe neighsafe3511
+schoolsafe7_safe
+
+*cumulative [to be decided]
+
+***CONTROLS AND OTHERS: 
+fre singpa9m_11y
+fre male ETHCM5 EDUH SECH5 income12345 income12345_quint AGEMB agemb_cat8 
+fre acountry 
+
+
+
+
+*---------------------------------------------------------*
+*---------------------------------------------------------*
+*---------------------------------------------------------*
+
+**RQ1 (a)
+
+*** PRELIMINARY LOGISTIC REGRESSIONS FOR ACEs
+//running logistic regressions examining association between ACEs domains to decide on final accumulative measure
+
+//code for exploratory logistic regressions using outreg. 
+global controls "male i.ETHCM5 AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y i.PCEs7_cat" 
+
+//ACEs
+foreach X of varlist single_domain divorce_domain domviolence_domain domviolenceM_domain domviolenceP_domain verbal_domain verbalM_domain physical_domain physicalM_domain alcohol_domain alcoholM_domain alcoholP_domain drugs_domain drugsM_domain drugsP_domain mentalhealth_domain mentalhealthM_domain mentalhealthP_domain poorrel_domain unhappy_domain parentchild_domain motherchild_domain fatherchild_domain disability_domain disabilityM_domain disabilityP_domain carer11 {
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+
+//RR
+mi estimate, eform dots post: glm `Y' `X' [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_ACEs_exploratory_`Y'.xls", eform stats(coef ci) cttop(RR unadjusted) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append nocons
+
+mi estimate, eform dots post: glm `Y' `X' $controls [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_ACEs_exploratory_`Y'.xls", eform stats(coef ci) cttop(RR adjusted) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append keep(`X') nocons
+	
+}		
+}
+
+
+
+
+*--------------------------------------------------------*
+*** DERIVING cumuative ACEs from 11 domain (based on logistic regression examinations above). 
+
+*continuous measure
+cap drop ACEs11
+mi passive: gen ACEs11= single_domain + divorce_domain + domviolence_domain + verbal_domain + physical_domain + alcohol_domain + drugs_domain + mentalhealth_domain + poorrel_domain + motherchild_domain + disabilityM_domain
+mi estimate, esampvaryok: prop ACEs11
+
+*categorical measure
+cap drop ACEs11_cat
+mi passive: gen ACEs11_cat=ACEs11
+mi passive: replace ACEs11_cat=6 if ACEs11>5 & ACEs11!=.
+label define ACEs11_cat 0 "No ACEs" 1 "One ACE" 2 "Two ACEs" 3 "Three ACEs" 4 "Four ACEs" 5 "Five ACEs" 6 "Six or more ACEs", replace
+mi xeq: label values ACEs11_cat ACEs11_cat
+mi estimate, esampvaryok post: svy: prop ACEs11_cat
+
+
+*checking association with youth violence
+mi estimate, esampvaryok post: svy: mean assault1417, over(ACEs11_cat)
+mi estimate, esampvaryok post or: svy: logistic assault1417 i.ACEs11_cat //OR 2.5 (0 vs 6 or more)
+
+mi estimate, esampvaryok post: svy: mean weapon1417, over(ACEs11_cat)
+mi estimate, esampvaryok post or: svy: logistic weapon1417 i.ACEs11_cat //OR 5.60 (0 vs 6 or more)
+
+mi estimate, esampvaryok post: svy: mean gangever1417, over(ACEs11_cat)
+mi estimate, esampvaryok post or: svy: logistic gangever1417 i.ACEs11_cat //OR 7.5 (0 vs 6 or more)
+
+
+save "$project\YEF_MCSID_analytical_sample_crimevariables_IMD_ACEs_PCEs_ADJUSTED.dta", replace
+
+
+
+
+*---------------------------------------------------------*
+*---------------------------------------------------------*
+*---------------------------------------------------------*
+**RQ2 (a)
+
+*** PRELIMINARY LOGISTIC REGRESSIONS FOR PCEs
+//running logistic regressions examining association between PCEs domains to decide on final accumulative measure
+
+
+//code for exploratory logistic regressions using outreg. 
+
+global controls "male i.ETHCM5 AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y i.ACEs11_cat" 
+
+//PCEs
+foreach X of varlist childcareformalAge3 peerslowrisk11 pospeer711 schoolconnect711_high teacherchild11_good activities11_high neighsafe3511 schoolsafe7_safe {
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+
+//RR
+mi estimate, eform dots post: glm `Y' `X' [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_PCEs_exploratory_`Y'.xls", eform stats(coef ci) cttop(RR unadjusted) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append nocons
+
+mi estimate, eform dots post: glm `Y' `X' $controls [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_PCEs_exploratory_`Y'.xls", eform stats(coef ci) cttop(RR adjusted) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append keep(`X') nocons
+	
+}		
+}
+
+
+*---------------------------------------------------------*
+*** DERIVING cumuative PCEs (based on logistic regression examinations above)
+
+//7 domains
+cap drop PCEs7
+mi passive: gen PCEs7= schoolconnect711_high + teacherchild11_good + schoolsafe7_safe + peerslowrisk11 + pospeer711 + activities11_high + neighsafe3511
+prop PCEs7 
+mi estimate, esampvaryok: prop PCEs7
+
+//7 domains (categorical)
+cap drop PCEs7_cat
+mi passive: gen PCEs7_cat=.
+mi passive: replace PCEs7_cat=0 if inrange(PCEs7,0,2)
+mi passive: replace PCEs7_cat=1 if PCEs7==3
+mi passive: replace PCEs7_cat=2 if PCEs7==4
+mi passive: replace PCEs7_cat=3 if PCEs7==5
+mi passive: replace PCEs7_cat=4 if inrange(PCEs7,6,7)
+label define PCEs7_cat 0 "0-2 PCEs" 1 "3 PCEs" 2 "4 PCEs" 3 "5 PCEs" 4 "6-7 PCEs", replace
+mi xeq: label values PCEs7_cat PCEs7_cat
+
+prop PCEs7_cat //
+mi estimate, esampvaryok post: prop PCEs7_cat
+
+
+*checking association with youth violence
+mi estimate, esampvaryok post: svy: mean assault1417, over(PCEs7_cat)
+mi estimate, esampvaryok post or: svy: logistic assault1417 i.PCEs7_cat //OR 0.33 (0 vs 6 or more)
+
+mi estimate, esampvaryok post: svy: mean weapon1417, over(PCEs7_cat)
+mi estimate, esampvaryok post or: svy: logistic weapon1417 i.PCEs7_cat //OR 0.16 (0 vs 6 or more)
+
+mi estimate, esampvaryok post: svy: mean gangever1417, over(PCEs7_cat)
+mi estimate, esampvaryok post or: svy: logistic gangever1417 i.PCEs7_cat //OR 0.19 (0 vs 6 or more)
+
+
+
+save "$project\YEF_MCSID_analytical_sample_crimevariables_IMD_ACEs_PCEs_ADJUSTED.dta", replace
+
+
+
+
+*---------------------------------------------------------------------------*
+
+//ADJUSTING NEIGHBOURHOOD CRIME AND IMD
+
+//neighbourhood crime variables
+fre rvso rcrime
+hist rvso 
+hist rcrime
+
+foreach X of varlist rvso rcrime {
+cap drop z`X'
+mi passive: egen z`X' = std(`X')	
+}
+
+cap drop rvso_quint
+mi passive: egen rvso_quint = cut(rvso), group(5)
+label define rvso_quint 0 "Lowest 20% area violence" 1 "Lowest 20-40% area violence" 2 "Middle 40-60%" 3 "Highest 60-80% area violence" 4 "Highest 80-100% area violence", replace
+mi xeq:  label values rvso_quint rvso_quint
+mi xeq:  label var rvso_quint "Neighbourhood violence and sexual offences (2012-2013) - quintiles"
+mi estimate, esampvaryok post: prop rvso_quint
+prop rvso_quint
+
+cap drop rcrime_quint
+mi passive: egen rcrime_quint = cut(rcrime), group(5)
+label define rcrime_quint 0 "Lowest 20% area crime" 1 "Lowest 20-40% area crime" 2 "Middle 40-60%" 3 "Highest 60-80% area crime" 4 "Highest 80-100% area crime", replace
+mi xeq:  label values rcrime_quint rcrime_quint
+mi xeq:  label var rcrime_quint "Neighbourhood crime generally (2012-2013) - quintiles"
+mi estimate, esampvaryok post: prop rcrime_quint
+prop rcrime_quint
+
+
+
+
+//imd variables
+fre e_r_imd11 w_r_imd11
+fre e_r_cri11 w_r_cri11
+fre country11
+
+*reversing IMD ranks as higher scores are the better off neighbourhoods
+fre e_r_imd11 //32477=>32478
+cap drop Re_r_imd11
+gen Re_r_imd11=e_r_imd11
+replace Re_r_imd11 = 32478 - e_r_imd11
+corr Re_r_imd11 e_r_imd11
+
+fre w_r_imd11 //1895=>1896
+cap drop Rw_r_imd11
+gen Rw_r_imd11=w_r_imd11
+replace Rw_r_imd11 = 1896 - w_r_imd11
+corr Rw_r_imd11 w_r_imd11
+
+fre e_r_cri11 //32479=>32480
+cap drop Re_r_cri11
+gen Re_r_cri11=e_r_imd11
+replace Re_r_cri11 = 32480 - e_r_cri11
+corr Re_r_cri11 e_r_cri11
+
+fre w_r_cri11 //1892=>1893
+cap drop Rw_r_cri11
+gen Rw_r_cri11=w_r_cri11
+replace Rw_r_cri11 = 1893 - w_r_cri11
+corr Rw_r_cri11 w_r_cri11
+
+
+foreach X of varlist Re_r_imd11 Rw_r_imd11 Re_r_cri11 Rw_r_cri11 {
+cap drop z`X'
+mi passive: egen z`X' = std(`X')	
+}
+
+
+cap drop zimd11
+mi passive: gen zimd11=.
+mi passive: replace zimd11=zRe_r_imd11 if country11==1
+mi passive: replace zimd11=zRw_r_imd11 if country11==2
+mi xeq:  label var zimd11 "standardized IMD rank - England and Wales combined"
+mi estimate: mean zimd11
+
+cap drop zimdcrim11
+mi passive: gen zimdcrim11=.
+mi passive: replace zimdcrim11=zRe_r_cri11 if country11==1
+mi passive: replace zimdcrim11=zRw_r_cri11 if country11==2
+mi xeq:  label var zimdcrim11 "standardized IMD crime rank - England and Wales combined"
+mi estimate: mean zimdcrim11
+
+
+
+cap drop e_r_imd11_quint
+mi passive: egen e_r_imd11_quint = cut(Re_r_imd11) if country11==1, group(5)
+label define e_r_imd11_quint 0 "Lowest 20%" 1 "Lowest 20-40%" 2 "Middle 40-60%" 3 "Highest 60-80%" 4 "Highest 80-100%", replace
+mi xeq:  label values e_r_imd11_quint e_r_imd11_quint
+mi xeq:  label var e_r_imd11_quint "English IMD rank - quintiles"
+mi estimate, esampvaryok post: prop e_r_imd11_quint if country11==1 
+
+cap drop w_r_imd11_quint
+mi passive: egen w_r_imd11_quint = cut(Rw_r_imd11) if country11==2, group(5)
+label define w_r_imd11_quint 0 "Lowest 20%" 1 "Lowest 20-40%" 2 "Middle 40-60%" 3 "Highest 60-80%" 4 "Highest 80-100%", replace
+mi xeq:  label values w_r_imd11_quint w_r_imd11_quint
+mi xeq:  label var w_r_imd11_quint "Welsh IMD rank - quintiles"
+mi estimate, esampvaryok post: prop w_r_imd11_quint if country11==2 
+
+cap drop imd11_quint
+mi passive: gen imd11_quint=.
+mi passive: replace imd11_quint=e_r_imd11_quint if country11==1
+mi passive: replace imd11_quint=w_r_imd11_quint if country11==2
+label define imd11_quint 0 "Lowest 20%" 1 "Lowest 20-40%" 2 "Middle 40-60%" 3 "Highest 60-80%" 4 "Highest 80-100%", replace
+mi xeq:  label var imd11_quint "IMD rank quintiles - England and Wales combined"
+mi estimate: mean imd11_quint
+
+
+
+cap drop e_r_cri11_quint
+mi passive: egen e_r_cri11_quint = cut(Re_r_cri11) if country11==1, group(5)
+label define e_r_cri11_quint 0 "Lowest 20%" 1 "Lowest 20-40%" 2 "Middle 40-60%" 3 "Highest 60-80%" 4 "Highest 80-100%", replace
+mi xeq:  label values e_r_cri11_quint e_r_cri11_quint
+mi xeq:  label var e_r_cri11_quint "English IMD crime domain - quintiles"
+mi estimate, esampvaryok post: prop e_r_cri11_quint if country11==1 
+
+cap drop w_r_cri11_quint
+mi passive: egen w_r_cri11_quint = cut(Rw_r_cri11) if country11==2, group(5)
+label define w_r_cri11_quint 0 "Lowest 20%" 1 "Lowest 20-40%" 2 "Middle 40-60%" 3 "Highest 60-80%" 4 "Highest 80-100%", replace
+mi xeq:  label values w_r_cri11_quint w_r_cri11_quint
+mi xeq:  label var w_r_cri11_quint "Welsh IMD community safety domain - quintiles"
+mi estimate, esampvaryok post: prop w_r_cri11_quint if country11==2 
+
+cap drop imdcrim11_quint
+mi passive: gen imdcrim11_quint=.
+mi passive: replace imdcrim11_quint=e_r_cri11_quint if country11==1
+mi passive: replace imdcrim11_quint=w_r_cri11_quint if country11==2
+label define imdcrim11_quint 0 "Lowest 20%" 1 "Lowest 20-40%" 2 "Middle 40-60%" 3 "Highest 60-80%" 4 "Highest 80-100%", replace
+mi xeq:  label var imdcrim11_quint "IMD crime rank quintiles - England and Wales combined"
+mi estimate: mean imdcrim11_quint
+
+
+
+
+
+//non crime IMD that are compatibale across England and Wales
+//we standrdise each of these separetely for each country, then add together and standardize overall measure
+describe e_r_inc11 e_r_emp11 e_r_hea11 e_r_edu11 //england
+describe w_r_inc11 w_r_emp11 w_r_hea11 w_r_edu11 //wales
+
+sum e_r_inc11 e_r_emp11 e_r_hea11 e_r_edu11 w_r_inc11 w_r_emp11 w_r_hea11 w_r_edu11
+
+foreach X of varlist e_r_inc11 e_r_emp11 e_r_hea11 e_r_edu11 w_r_inc11 w_r_emp11 w_r_hea11 w_r_edu11 {
+cap drop z`X'
+mi passive: egen z`X' = std(`X')	
+}
+
+*income
+cap drop IMDinc
+mi passive: gen IMDinc=.
+mi passive: replace IMDinc=ze_r_inc11 if country11==1
+mi passive: replace IMDinc=zw_r_inc11 if country11==2
+mi estimate: mean IMDinc 
+cap drop zIMDinc
+mi passive: egen zIMDinc = std(IMDinc)
+mi estimate: mean zIMDinc 
+*employment
+cap drop IMDemp
+mi passive: gen IMDemp=.
+mi passive: replace IMDemp=ze_r_emp11 if country11==1
+mi passive: replace IMDemp=zw_r_emp11 if country11==2
+mi estimate: mean IMDemp 
+cap drop zIMDemp
+mi passive: egen zIMDemp = std(IMDemp)
+mi estimate: mean zIMDemp 
+*health
+cap drop IMDhea
+mi passive: gen IMDhea=.
+mi passive: replace IMDhea=ze_r_hea11 if country11==1
+mi passive: replace IMDhea=zw_r_hea11 if country11==2
+mi estimate: mean IMDhea 
+cap drop zIMDhea
+mi passive: egen zIMDhea = std(IMDhea)
+mi estimate: mean zIMDhea 
+*education, training and skills
+cap drop IMDedu
+mi passive: gen IMDedu=.
+mi passive: replace IMDedu=ze_r_edu11 if country11==1
+mi passive: replace IMDedu=zw_r_edu11 if country11==2
+mi estimate: mean IMDedu 
+cap drop zIMDedu
+mi passive: egen zIMDedu = std(IMDedu)
+mi estimate: mean zIMDedu 
+
+
+
+*overall IMD non-crime measure (for sensitivity analyses)
+cap drop IMDnoncrim
+mi passive: gen IMDnoncrim= zIMDinc + zIMDemp + zIMDhea + zIMDedu
+cap drop zIMDnoncrim
+mi passive: egen zIMDnoncrim = std(IMDnoncrim)
+mi estimate: mean zIMDnoncrim 
+*tertiary measure
+cap drop IMDnoncrim_temp 
+mi passive: egen IMDnoncrim_temp = cut(zIMDnoncrim), group(3)
+cap drop IMDnoncrim_tert
+mi passive: gen IMDnoncrim_tert=.
+mi passive: replace IMDnoncrim_tert=0 if IMDnoncrim_temp==2
+mi passive: replace IMDnoncrim_tert=2 if IMDnoncrim_temp==0
+label define IMDnoncrim_tert 0 "Lowest 33% deprivation" 1 "Middle 33-66% deprivation" 2 "Highest 66-100% deprivation", replace
+mi xeq:  label values IMDnoncrim_tert IMDnoncrim_tert
+mi xeq:  label var IMDnoncrim_tert "Neighbourhood non-crime deprivation - tertiles"
+mi estimate, esampvaryok post: prop IMDnoncrim_tert
+prop IMDnoncrim_tert
+
+
+
+//reduced area violence variable (tertiles)
+cap drop rvso_tert
+mi passive: egen rvso_tert = cut(rvso), group(3)
+label define rvso_tert 0 "Lowest 33% area violence" 1 "Middle 33-66% area violence" 2 "Highest 66-100%", replace
+mi xeq:  label values rvso_tert rvso_tert
+mi xeq:  label var rvso_tert "Neighbourhood violence and sexual offences (2012-2013) - tertiles"
+mi estimate, esampvaryok post: prop rvso_tert
+prop rvso_tert
+
+cap drop rcrime_tert
+mi passive: egen rcrime_tert = cut(rcrime), group(3)
+label define rcrime_tert 0 "Lowest 33% area crime" 1 "Middle 33-66% area crime" 2 "Highest 66-100%", replace
+mi xeq:  label values rcrime_tert rcrime_tert
+mi xeq:  label var rcrime_tert "Neighbourhood crime generally (2012-2013) - tertiles"
+mi estimate, esampvaryok post: prop rcrime_tert
+prop rcrime_tert
+
+
+
+//reduced violence crime variables (binary)
+cap drop rvso_bin
+mi passive: egen rvso_bin = cut(rvso), group(2)
+label define rvso_bin 0 "Lowest 50% area violence" 1 "Highest 50-100%", replace
+mi xeq:  label values rvso_bin rvso_bin
+mi xeq:  label var rvso_bin "Neighbourhood violence and sexual offences (2012-2013) - binary"
+mi estimate, esampvaryok post: prop rvso_bin
+prop rvso_bin
+
+cap drop rcrime_bin
+mi passive: egen rcrime_bin = cut(rcrime), group(2)
+label define rcrime_bin 0 "Lowest 50% area crime" 1 "Highest 50-100%", replace
+mi xeq:  label values rcrime_bin rcrime_bin
+mi xeq:  label var rcrime_bin "Neighbourhood crime generally (2012-2013) - binary"
+mi estimate, esampvaryok post: prop rcrime_bin
+prop rcrime_bin
+
+
+//Reduced categorical measure of ACEs v.C
+cap drop ACEs11_cat3
+mi passive: gen ACEs11_cat3=ACEs11
+mi passive: replace ACEs11_cat3=0 if inrange ACEs11=1 & ACEs11!=.
+mi passive: replace ACEs11_cat3=1 if inrange(ACEs11,2,4) & ACEs11!=.
+mi passive: replace ACEs11_cat3=2 if inrange(ACEs11,5,10) & ACEs11!=.
+mi update
+label define ACEs11_cat3 0 "0-1 ACEs" 1 "2-4 ACE" 2 "5 or more ACEs", replace
+mi xeq: label values ACEs11_cat3 ACEs11_cat3
+mi estimate, esampvaryok post: svy: prop ACEs11_cat3
+
+//Reduced categorical measure of ACEs v.D
+cap drop ACEs11_cat4
+mi passive: gen ACEs11_cat4=ACEs11
+mi passive: replace ACEs11_cat4=1 if inrange(ACEs11,1,2)
+mi passive: replace ACEs11_cat4=2 if inrange(ACEs11,3,4)
+mi passive: replace ACEs11_cat4=3 if inrange(ACEs11,5,11)
+label define ACEs11_cat4 0 "0 ACEs" 1 "1-2 ACE" 2 "3-4 ACE" 3 "5 or more ACEs", replace
+mi xeq: label values ACEs11_cat4 ACEs11_cat4
+mi estimate, esampvaryok post: prop ACEs11_cat4
+
+
+save "$project\YEF_MCSID_analytical_sample_crimevariables_IMD_ACEs_PCEs_ADJUSTED.dta", replace
+
+use "$project\YEF_MCSID_analytical_sample_crimevariables_IMD_ACEs_PCEs_ADJUSTED.dta", clear
+
+
+
+
+*----------------------------------------------------------------------------*
+
+// ALL STUDY VARIABLES
+
+//police data
+rvso rcrime zrvso zrcrime rvso_quint rcrime_quint rvso_tert rcrime_tert
+
+//imd data
+zRe_r_imd11 zRw_r_imd11 zimd11
+zRe_r_cri11 zRw_r_cri11 zimdcrim11
+e_r_imd11_quint w_r_imd11_quint imd11_quint 
+e_r_cri11_quint w_r_cri11_quint imdcrim11_quint  
+
+//cm crime
+assault1417 weapon1417 gangever1417
+
+//ACEs and PCEs
+ACEs11_cat PCEs7_cat //full categories
+ACEs11_cat6 PCEs7_cat //interactions fingrained measure
+ACEs11_high3plus PCEs7_high5plus //interactions reduced measure
+
+//gender and ethnicity
+male ethmin ETHCM5
+
+//control variables 
+male i.ETHCM5 AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y
+
+//non-crime imd domains combined England and Wales
+zIMDinc zIMDemp zIMDhea zIMDedu
+
+*----------------------------------------------------------------------------*
+
+
+
+
+
+
+
+
+**# Bookmark #7
+use "$project\YEF_MCSID_analytical_sample_crimevariables_IMD_ACEs_PCEs_ADJUSTED.dta", clear
+*---------------------------------------------------------*
+*---------------------------------------------------------*
+*---------------------------------------------------------*
+****DESCRIPTIVES
+
+putdocx clear //clears or ends without saving
+
+*** 1) OVERALL SAMPLE DESCRIPTIVES
+putdocx begin
+putdocx paragraph, style(Heading1)
+putdocx text ("Socioeconomic and demographic descriptives for sample overall")
+putdocx save "$output\Sample_descriptives.docx", replace
+
+foreach X of varlist male ETHCM5 agemb_cat8 singpa9m_11y income12345_quint EDUH SECH5 acountry {
+mi estimate, esampvaryok post: svy: prop `X'
+putdocx begin
+putdocx paragraph, style(Heading3)
+putdocx text ("`X' for sample overall")
+putdocx table table = etable
+putdocx table table(.,2/5), nformat(%5.3f) //three decimals
+putdocx table table(.,3), drop //dropping standard error
+putdocx save "$output\Sample_descriptives.docx", append
+}
+
+foreach X of varlist income12345 AGEMB {
+mi estimate, esampvaryok post: svy: mean `X'
+putdocx begin
+putdocx paragraph, style(Heading3)
+putdocx text ("`X' for sample overall")
+putdocx table table = etable
+putdocx table table(.,2/5), nformat(%5.3f) //three decimals
+putdocx table table(.,3), drop //dropping standard error
+putdocx save "$output\Sample_descriptives.docx", append
+}
+
+
+*---------------------------------------------------------*
+
+*** 2) DESCRIPTIVES FOR YOUTH VIOLENCE
+putdocx begin
+putdocx paragraph, style(Heading1)
+putdocx text ("Descriptives of youth violence measures overall and by demographics and socioeconomics")
+putdocx save "$output\violence_descriptives.docx", replace
+
+
+*overall and by demographics and SES
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+mi estimate, esampvaryok post: svy: mean `Y'
+putdocx begin
+putdocx paragraph, style(Heading3)
+putdocx text ("`Y' for sample overall")
+putdocx table table = etable
+putdocx table table(.,2/5), nformat(%5.3f) //three decimals
+putdocx table table(.,3), drop //dropping standard error
+putdocx save "$output\violence_descriptives.docx", append
+
+foreach X of varlist male ETHCM5 agemb_cat8 singpa9m_11y income12345_quint EDUH SECH5 acountry {
+mi estimate, esampvaryok post: svy: mean `Y', over(`X')
+putdocx begin
+putdocx paragraph, style(Heading3)
+putdocx text ("`Y' by `X'")
+putdocx table table = etable
+putdocx table table(.,2/5), nformat(%5.3f) //three decimals
+putdocx table table(.,3), drop //dropping standard error
+putdocx save "$output\violence_descriptives.docx", append
+}
+}
+
+
+*---------------------------------------------------------*
+*** 5) DESCRIPTIVES: Final ACEs domains
+//have included by gender as well
+putdocx clear //clears or ends without saving
+putdocx begin
+putdocx paragraph, style(Heading1)
+putdocx text ("Descriptives of ACEs domains and cumulative measures")
+putdocx save "$output\Descriptives_ACEs.docx", replace
+
+foreach X of varlist single_domain divorce_domain domviolence_domain verbal_domain physical_domain alcohol_domain drugs_domain mentalhealth_domain poorrel_domain motherchild_domain disabilityM_domain {
+mi estimate, esampvaryok: svy: mean `X'
+putdocx begin
+putdocx paragraph, style(Heading3)
+putdocx text ("Table: Descriptives for `X'")
+putdocx table table = etable
+putdocx table table(.,2/5), nformat(%5.3f) //three decimals
+putdocx table table(.,3), drop //dropping standard error 
+putdocx save "$output\Descriptives_ACEs.docx", append	
+	
+foreach M of varlist male {
+mi estimate, esampvaryok post: svy: mean `X', over(`M')
+putdocx begin
+putdocx paragraph, style(Heading3)
+putdocx text ("Table: Descriptives for `X' by `M'")
+putdocx table table = etable
+putdocx table table(.,2/5), nformat(%5.3f) //three decimals
+putdocx table table(.,3), drop //dropping standard error
+putdocx save "$output\Descriptives_ACEs.docx", append
+}
+}
+
+
+*** DESCRIPTIVES: Final cumulative continuous ACEs 
+//overall proportion and mean and means by gender
+foreach X of varlist ACEs11 {
+mi estimate, esampvaryok: svy: prop `X'
+putdocx begin
+putdocx paragraph, style(Heading3)
+putdocx text ("Table:`X' proportions")
+putdocx table table = etable
+putdocx table table(.,2/5), nformat(%5.3f) //three decimals
+putdocx table table(.,3), drop //dropping standard error
+putdocx save "$output\Descriptives_ACEs.docx", append
+
+mi estimate, esampvaryok: svy: mean `X'
+putdocx begin
+putdocx paragraph, style(Heading3)
+putdocx text ("Table: `X' mean")
+putdocx table table = etable
+putdocx table table(.,2/5), nformat(%5.3f) //three decimals
+putdocx table table(.,3), drop //dropping standard error
+putdocx save "$output\Descriptives_ACEs.docx", append
+
+mi estimate, esampvaryok: svy: mean `X', over(male)
+putdocx begin
+putdocx paragraph, style(Heading3)
+putdocx text ("Table: `X' mean by gender")
+putdocx table table = etable
+putdocx table table(.,2/5), nformat(%5.3f) //three decimals
+putdocx table table(.,3), drop //dropping standard error 
+putdocx save "$output\Descriptives_ACEs.docx", append
+
+}
+
+
+*** DESCRIPTIVES: Final cumulative categorical ACEs //overall and by demographics and socioeconomics
+foreach X of varlist ACEs11_cat {
+mi estimate, esampvaryok: svy: prop `X'
+putdocx begin
+putdocx paragraph, style(Heading3)
+putdocx text ("Table: Descriptives for `X'")
+putdocx table table = etable
+putdocx table table(.,2/5), nformat(%5.3f) //three decimals
+putdocx table table(.,3), drop //dropping standard error 
+putdocx save "$output\Descriptives_ACEs.docx", append	
+	
+foreach M of varlist male ETHCM5 agemb_cat8 singpa9m_11y income12345_quint EDUH SECH5 acountry {
+mi estimate, esampvaryok post: svy: prop `X', over(`M')
+putdocx begin
+putdocx paragraph, style(Heading3)
+putdocx text ("Table: Descriptives for `X' by `M'")
+putdocx table table = etable
+putdocx table table(.,2/5), nformat(%5.3f) //three decimals
+putdocx table table(.,3), drop //dropping standard error 
+putdocx save "$output\Descriptives_ACEs.docx", append
+}
+}
+
+
+
+
+*---------------------------------------------------------*
+*** 6) DESCRIPTIVES: Final PCEs items
+//have included by gender as well
+
+putdocx clear //clears or ends without saving
+putdocx begin
+putdocx paragraph, style(Heading1)
+putdocx text ("Descriptives of PCEs domains and cumulative measures")
+putdocx save "$output\Descriptives_PCEs.docx", replace
+
+foreach X of varlist schoolconnect711_high teacherchild11_good schoolsafe7_safe  peerslowrisk11 pospeer711 activities11_high neighsafe3511 {
+
+mi estimate, esampvaryok: svy: mean `X'
+putdocx begin
+putdocx paragraph, style(Heading3)
+putdocx text ("Table: Descriptives for `X'")
+putdocx table table = etable
+putdocx table table(.,2/5), nformat(%5.3f) //three decimals
+putdocx table table(.,3), drop //dropping standard error 
+putdocx save "$output\Descriptives_PCEs.docx", append
+
+foreach M of varlist male {
+mi estimate, esampvaryok post: svy: mean `X', over(`M')
+putdocx begin
+putdocx paragraph, style(Heading3)
+putdocx text ("Table: Descriptives for `X' by `M'")
+putdocx table table = etable
+putdocx table table(.,2/5), nformat(%5.3f) //three decimals
+putdocx table table(.,3), drop //dropping standard error
+putdocx save "$output\Descriptives_PCEs.docx", append
+}
+}
+
+
+//DESCRIPTIVES: Cumulative PCEs (full measure)
+//overall proportion and mean and means by gender
+
+
+//7 item PCEs
+putdocx clear //clears or ends without saving
+putdocx begin
+putdocx paragraph, style(Heading1)
+putdocx text ("Descriptives of PCEs domains and cumulative measures")
+putdocx save "$output\Descriptives_PCEs7.docx", replace
+
+//DESCRIPTIVES: Cumulative PCEs (full measure)
+//overall proportion and mean and means by gender
+
+
+//7 item variable
+foreach X of varlist PCEs7 {	
+mi estimate, esampvaryok: svy: prop `X'
+putdocx begin
+putdocx paragraph, style(Heading3)
+putdocx text ("Table:`X' proportions")
+putdocx table table = etable
+putdocx table table(.,2/5), nformat(%5.3f) //three decimals
+putdocx table table(.,3), drop //dropping standard error
+putdocx save "$output\Descriptives_PCEs7.docx", append
+
+mi estimate, esampvaryok: svy: mean `X'
+putdocx begin
+putdocx paragraph, style(Heading3)
+putdocx text ("Table: `X' mean")
+putdocx table table = etable
+putdocx table table(.,2/5), nformat(%5.3f) //three decimals
+putdocx table table(.,3), drop //dropping standard error
+putdocx save "$output\Descriptives_PCEs7.docx", append
+
+mi estimate, esampvaryok: svy: mean `X', over(male)
+putdocx begin
+putdocx paragraph, style(Heading3)
+putdocx text ("Table: `X' mean by gender")
+putdocx table table = etable
+putdocx table table(.,2/5), nformat(%5.3f) //three decimals
+putdocx table table(.,3), drop //dropping standard error 
+putdocx save "$output\Descriptives_PCEs7.docx", append
+
+}
+
+
+*** DESCRIPTIVES: Final cumulative 7 item categorical PCEs //overall and by demographics and socioeconomics
+foreach X of varlist PCEs7_cat {
+mi estimate, esampvaryok: svy: prop `X'
+putdocx begin
+putdocx paragraph, style(Heading3)
+putdocx text ("Table: Descriptives for `X'")
+putdocx table table = etable
+putdocx table table(.,2/5), nformat(%5.3f) //three decimals
+putdocx table table(.,3), drop //dropping standard error 
+putdocx save "$output\Descriptives_PCEs7.docx", append
+
+foreach M of varlist male ETHCM5 agemb_cat8 singpa9m_11y income12345_quint EDUH SECH5 acountry {
+mi estimate, esampvaryok post: svy: prop `X', over(`M')
+putdocx begin
+putdocx paragraph, style(Heading3)
+putdocx text ("Table: Descriptives for `X' by `M'")
+putdocx table table = etable
+putdocx table table(.,2/5), nformat(%5.3f) //three decimals
+putdocx table table(.,3), drop //dropping standard error 
+putdocx save "$output\Descriptives_PCEs7.docx", append
+}
+}
+
+
+
+*---------------------------------------------------------*
+*checking gender differences on activity items
+
+putdocx clear //clears or ends without saving
+putdocx begin
+putdocx paragraph, style(Heading1)
+putdocx text ("Checking gender differences on activity items")
+putdocx save "$output\Descriptives_activities_gender.docx", replace
+
+foreach X of varlist clubsport11_high artscrafts11_high reading11_high activities11_high {
+mi estimate, esampvaryok: svy: mean `X'
+putdocx begin
+putdocx paragraph, style(Heading3)
+putdocx text ("Table: Descriptives for `X'")
+putdocx table table = etable
+putdocx table table(.,2/5), nformat(%5.3f) //three decimals
+putdocx table table(.,3), drop //dropping standard error 
+putdocx save "$output\Descriptives_activities_gender.docx", append	
+	
+foreach M of varlist male {
+mi estimate, esampvaryok post: svy: mean `X', over(`M')
+putdocx begin
+putdocx paragraph, style(Heading3)
+putdocx text ("Table: Descriptives for `X' by `M'")
+putdocx table table = etable
+putdocx table table(.,2/5), nformat(%5.3f) //three decimals
+putdocx table table(.,3), drop //dropping standard error
+putdocx save "$output\Descriptives_activities_gender.docx", append
+}
+}
+
+*regressions
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+foreach X of varlist clubsport11_high artscrafts11_high reading11_high activities11_high  {
+mi estimate, esampvaryok post or: svy: logistic `Y' i.`X'
+putdocx begin
+putdocx paragraph, style(Heading3)
+putdocx text ("Table: `Y' predicted by `X'")
+putdocx table table = etable
+putdocx table table(.,2/5), nformat(%5.2f) //two decimals 
+putdocx save "$output\Descriptives_activities_gender.docx", append
+}
+}
+
+*regressions with gender interaction
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+foreach X of varlist clubsport11_high artscrafts11_high reading11_high activities11_high  {
+mi estimate, esampvaryok post or: svy: logistic `Y' i.`X'##i.male
+putdocx begin
+putdocx paragraph, style(Heading3)
+putdocx text ("Table: `Y' predicted by `X'")
+putdocx table table = etable
+putdocx table table(.,2/5), nformat(%5.2f) //two decimals 
+putdocx save "$output\Descriptives_activities_gender.docx", append
+}
+}
+
+
+*regressions by gender
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+foreach X of varlist clubsport11_high artscrafts11_high reading11_high activities11_high  {
+
+mi estimate, esampvaryok post or: svy: logistic `Y' i.`X' if male==1
+putdocx begin
+putdocx paragraph, style(Heading3)
+putdocx text ("Table: `Y' predicted by `X' for males")
+putdocx table table = etable
+putdocx table table(.,2/5), nformat(%5.2f) //two decimals 
+putdocx save "$output\Descriptives_activities_gender.docx", append
+
+mi estimate, esampvaryok post or: svy: logistic `Y' i.`X' if male==0
+putdocx begin
+putdocx paragraph, style(Heading3)
+putdocx text ("Table: `Y' predicted by `X' for females")
+putdocx table table = etable
+putdocx table table(.,2/5), nformat(%5.2f) //two decimals 
+putdocx save "$output\Descriptives_activities_gender.docx", append
+
+}
+}
+
+
+
+*---------------------------------------------------------*
+*---------------------------------------------------------*
+*---------------------------------------------------------*
+
+*** ASSOCIATION OF ACEs WITH PCEs
+
+//7 item PCEs
+putdocx begin
+putdocx paragraph, style(Heading1)
+putdocx text ("Table: Association between ACEs and PCEs")
+putdocx save "$output\ACEs_over_PCEs7.docx", replace
+
+mi estimate, esampvaryok post: svy: prop ACEs11_cat, over(PCEs7_cat)
+putdocx begin
+putdocx table table = etable
+putdocx table table(.,2/5), nformat(%5.3f) //three decimals
+putdocx table table(.,3), drop //dropping standard error 
+putdocx save "$output\ACEs_over_PCEs7.docx", append
+
+mi estimate, esampvaryok post: svy: prop PCEs7_cat, over(ACEs11_cat)
+putdocx begin
+putdocx table table = etable
+putdocx table table(.,2/5), nformat(%5.3f) //three decimals
+putdocx table table(.,3), drop //dropping standard error 
+putdocx save "$output\ACEs_over_PCEs7.docx", append
+
+
+
+
+*----------------------------------------------------------------------------*
+**# Bookmark #1
+***** ANALYSES DESCRIPTIVES NEIGHBOURHOOD CRIME *****
+
+use "$project\YEF_MCSID_analytical_sample_crimevariables_IMD_ACEs_PCEs_ADJUSTED.dta", clear
+global output "S:\CLS_DAC_MCS\DAC-174\data\analyses output\Descriptives"
+mi svyset SPTN00 [pweight=AOVWT1], strata(PTTYPE2) fpc(NH2)
+
+*** NEIGHBURHOOD CRIME DESCRIPTIVES
+
+*neighbourhood violent crime
+fre rvso
+mean rvso
+mean rvso, over(rvso_quint)
+
+sum rvso if rvso_quint==0
+sum rvso if rvso_quint==1
+sum rvso if rvso_quint==2
+sum rvso if rvso_quint==3
+sum rvso if rvso_quint==4
+
+fre rvso_quint 
+
+
+
+*neighbourhoods general crime
+fre rcrime
+mean rcrime
+sum rcrime
+mean rcrime, over(rcrime_quint)
+
+sum rcrime if rcrime_quint==0
+sum rcrime if rcrime_quint==1
+sum rcrime if rcrime_quint==2
+sum rcrime if rcrime_quint==3
+sum rcrime if rcrime_quint==4
+
+fre rcrime_quint
+
+*correlation between violent and general crime
+corr rvso rcrime //r=0.89 
+
+
+
+
+*** DESCRIPTIVES: Violent crime quintiles //overall and by demographics and socioeconomics
+putdocx clear //clears or ends without saving
+putdocx begin
+putdocx paragraph, style(Heading1)
+putdocx text ("Descriptives of neighbourhood crime and by demographics and socioeconomics")
+putdocx save "$output\neighbourhood_crime_descriptives.docx", replace
+
+foreach X of varlist rvso_quint rcrime_quint {
+mi estimate, esampvaryok: svy: prop `X'
+putdocx begin
+putdocx paragraph, style(Heading3)
+putdocx text ("Table: Descriptives for `X'")
+putdocx table table = etable
+putdocx table table(.,2/5), nformat(%5.3f) //three decimals
+putdocx table table(.,3), drop //dropping standard error 
+putdocx save "$output\neighbourhood_crime_descriptives.docx", append	
+	
+foreach M of varlist male ETHCM5 agemb_cat8 singpa9m_11y income12345_quint EDUH SECH5 acountry {
+mi estimate, esampvaryok post: svy: prop `X', over(`M')
+putdocx begin
+putdocx paragraph, style(Heading3)
+putdocx text ("Table: Descriptives for `X' by `M'")
+putdocx table table = etable
+putdocx table table(.,2/5), nformat(%5.3f) //three decimals
+putdocx table table(.,3), drop //dropping standard error 
+putdocx save "$output\neighbourhood_crime_descriptives", append
+}
+}
+
+
+
+putdocx clear //clears or ends without saving
+putdocx begin
+putdocx paragraph, style(Heading1)
+putdocx text ("Descriptives of neighbourhood crime by ACEs and PCEs")
+putdocx save "$output\neighbourhood_crime_descriptives.docx", append
+
+foreach X of varlist rvso_quint rcrime_quint {
+		
+foreach M of varlist ACEs11_cat PCEs7_cat {
+mi estimate, esampvaryok post: svy: prop `X', over(`M')
+putdocx begin
+putdocx paragraph, style(Heading3)
+putdocx text ("Table: Descriptives for `X' by `M'")
+putdocx table table = etable
+putdocx table table(.,2/5), nformat(%5.3f) //three decimals
+putdocx table table(.,3), drop //dropping standard error 
+putdocx save "$output\neighbourhood_crime_descriptives", append
+}
+}
+
+
+
+putdocx clear //clears or ends without saving
+putdocx begin
+putdocx paragraph, style(Heading1)
+putdocx text ("Descriptives of ACEs and PCEs by neighbourhood crime")
+putdocx save "$output\neighbourhood_crime_descriptives.docx", append
+
+foreach X of varlist ACEs11_cat PCEs7_cat  {
+		
+foreach M of varlist rvso_quint rcrime_quint {
+mi estimate, esampvaryok post: svy: prop `X', over(`M')
+putdocx begin
+putdocx paragraph, style(Heading3)
+putdocx text ("Table: Descriptives for `X' by `M'")
+putdocx table table = etable
+putdocx table table(.,2/5), nformat(%5.3f) //three decimals
+putdocx table table(.,3), drop //dropping standard error 
+putdocx save "$output\neighbourhood_crime_descriptives", append
+}
+}
+
+
+
+putdocx clear //clears or ends without saving
+putdocx begin
+putdocx paragraph, style(Heading1)
+putdocx text ("Descriptives of ACEs by PCEs")
+putdocx save "$output\ACEs_by_PCEs.docx", replace
+
+foreach X of varlist ACEs11_cat  {
+		
+foreach M of varlist PCEs7_cat {
+mi estimate, esampvaryok post: svy: prop `X', over(`M')
+putdocx begin
+putdocx paragraph, style(Heading3)
+putdocx text ("Table: Descriptives for `X' by `M'")
+putdocx table table = etable
+putdocx table table(.,2/5), nformat(%5.3f) //three decimals
+putdocx table table(.,3), drop //dropping standard error 
+putdocx save "$output\ACEs_by_PCEs", append
+}
+}
+
+foreach X of varlist PCEs7_cat  {
+		
+foreach M of varlist ACEs11_cat {
+mi estimate, esampvaryok post: svy: prop `X', over(`M')
+putdocx begin
+putdocx paragraph, style(Heading3)
+putdocx text ("Table: Descriptives for `X' by `M'")
+putdocx table table = etable
+putdocx table table(.,2/5), nformat(%5.3f) //three decimals
+putdocx table table(.,3), drop //dropping standard error 
+putdocx save "$output\ACEs_by_PCEs", append
+}
+}
+
+
+*----------------------------------------------------------------------------*
+
+
+
+
+
+
+**# Bookmark #1
+******************************************************************************
+*----------------------------------------------------------------------------*   
+***** ANALYSES RQ 1*****  
+//Results research question 1:Which single and cumulative ACEs are associated with youth violence, and what are the magnitudes of the associations?
+
+use "$project\YEF_MCSID_analytical_sample_crimevariables_IMD_ACEs_PCEs_ADJUSTED.dta", clear
+
+drop if country11==.
+mi update
+
+global output "S:\CLS_DAC_MCS\DAC-174\data\analyses output\RQ1"
+
+
+
+//SINGLE ACES
+global controls "male i.ETHCM5 AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y i.PCEs7_cat" 
+
+foreach X of varlist single_domain divorce_domain domviolence_domain verbal_domain physical_domain alcohol_domain drugs_domain mentalhealth_domain poorrel_domain motherchild_domain disabilityM_domain {
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+
+//RR
+mi estimate, eform dots post: glm `Y' `X' $controls [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_ACEs_single_`Y'.xls", eform stats(coef ci) cttop(RR adjusted) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append keep(`X') nocons
+	
+}		
+}
+
+
+
+//CUMULATIVE ACES
+global controls1 "male i.ETHCM5 AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y" 
+global controls2 "male i.ETHCM5 AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y i.PCEs7_cat" 
+
+foreach X of varlist ACEs11_cat {
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+
+//WHOLE SAMPLE
+
+//margins
+
+mi estimate, esampvaryok post or: logistic `Y' i.`X' $controls1 [pweight=AOVWT1], robust
+mimrgns `X', vce(unconditional) predict(pr) post
+outreg2 using "$output\logistic_`Y'_`X'.xls", ctitle(margins controls1) ci label side noaster append	
+
+mi estimate, esampvaryok post or: logistic `Y' i.`X' $controls2 [pweight=AOVWT1], robust
+mimrgns `X', vce(unconditional) predict(pr) post
+outreg2 using "$output\logistic_`Y'_`X'.xls", ctitle(margins controls2) ci label side noaster append	
+				
+
+//RR
+mi estimate, eform dots post: glm `Y' i.`X' $controls1 [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'.xls", eform stats(coef ci) cttop(RR controls1) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+mi estimate, eform dots post: glm `Y' i.`X' $controls2 [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'.xls", eform stats(coef ci) cttop(RR controls2) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+	
+}		
+}
+
+
+
+//GENDER
+global controls1 "i.ETHCM5 AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y" 
+global controls2 "i.ETHCM5 AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y i.PCEs7_cat" 
+
+//ACEs
+foreach X of varlist ACEs11_cat {
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+
+//RR
+mi estimate, eform dots post: glm `Y' i.`X' $controls2 [pweight=AOVWT1] if male==1, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_gender.xls", eform stats(coef ci) cttop(M RR controls2) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+mi estimate, eform dots post: glm `Y' i.`X' $controls2 [pweight=AOVWT1] if male==0, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_gender.xls", eform stats(coef ci) cttop(F RR controls2) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+//INTERACTION 
+mi estimate, eform dots post: glm `Y' i.male##i.`X' $controls2 [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_gender.xls", eform stats(coef ci) cttop(RR adj int) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+//MARGINS
+mi estimate, esampvaryok post or: logistic `Y' i.male#i.`X' $controls2 [pweight=AOVWT1]
+mimrgns male#`X', vce(unconditional) predict(pr) post
+outreg2 using "$output\logistic_`Y'_`X'_gender.xls", ctitle(margins adj) side noaster stats(coef ci) append
+
+}		
+}
+
+
+
+//ETHNICITY - binary
+
+global controls1 "male AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y" 
+global controls2 "male AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y i.PCEs7_cat" 
+
+//ACEs
+foreach X of varlist ACEs11_cat {
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+
+//RR
+mi estimate, eform dots post: glm `Y' i.`X' $controls2 [pweight=AOVWT1] if ethmin==1, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity.xls", eform stats(coef ci) cttop(Minority RR controls2) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+mi estimate, eform dots post: glm `Y' i.`X' $controls2 [pweight=AOVWT1] if ethmin==0, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity.xls", eform stats(coef ci) cttop(White RR controls2) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+//INTERACTION 
+mi estimate, eform dots post: glm `Y' i.ethmin##i.`X' $controls2 [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity.xls", eform stats(coef ci) cttop(RR adj int) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+//MARGINS
+mi estimate, esampvaryok post or: logistic `Y' i.ethmin#i.`X' $controls2 [pweight=AOVWT1]
+mimrgns ethmin#`X', vce(unconditional) predict(pr) post
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity.xls", ctitle(margins adj) side noaster stats(coef ci) append
+
+}		
+}
+
+
+
+//ETHNICITY - categories
+
+use "$project\YEF_MCSID_analytical_sample_crimevariables_IMD_ACEs_PCEs_ADJUSTED.dta", clear
+
+drop if country11==.
+mi update
+
+drop if ETHCM5==5
+mi update
+
+global output "S:\CLS_DAC_MCS\DAC-174\data\analyses output\RQ1"
+
+global controls1 "male AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y" 
+global controls2 "male AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y i.PCEs7_cat" 
+
+//ACEs
+foreach X of varlist ACEs11_high3plus {
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+
+//RR
+mi estimate, eform dots post esampvaryok: glm `Y' i.`X' $controls2 [pweight=AOVWT1] if ETHCM5==1, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity_cat.xls", eform stats(coef ci) cttop(White RR controls2) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+mi estimate, eform dots post esampvaryok: glm `Y' i.`X' $controls2 [pweight=AOVWT1] if ETHCM5==2, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity_cat.xls", eform stats(coef ci) cttop(Mixed RR controls2) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+mi estimate, eform dots post esampvaryok: glm `Y' i.`X' $controls2 [pweight=AOVWT1] if ETHCM5==3, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity_cat.xls", eform stats(coef ci) cttop(Asian RR controls2) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+mi estimate, eform dots post esampvaryok: glm `Y' i.`X' $controls2 [pweight=AOVWT1] if ETHCM5==4, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity_cat.xls", eform stats(coef ci) cttop(Black RR controls2) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+
+//INTERACTION 
+mi estimate, eform dots post esampvaryok: glm `Y' i.ETHCM5##i.`X' $controls2 [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity_cat.xls", eform stats(coef ci) cttop(RR adj int) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+}		
+}
+
+
+//separate margins analyses 
+foreach X of varlist ACEs11_high3plus {
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+
+//MARGINS
+mi estimate, esampvaryok post or: logistic `Y' i.ETHCM5#i.`X' $controls2 [pweight=AOVWT1]
+mimrgns ETHCM5#`X', vce(unconditional) predict(pr) post
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity_cat_margins.xls", ctitle(margins adj) side noaster stats(coef ci) append
+
+}		
+}
+
+
+
+
+
+
+
+
+**# Bookmark #1
+******************************************************************************
+*----------------------------------------------------------------------------*   
+***** ANALYSES RQ 2*****  
+
+//Results research question 2: Which single and cumulative PCEs are associated with youth violence, and what are the magnitudes of the associations?
+
+
+use "$project\YEF_MCSID_analytical_sample_crimevariables_IMD_ACEs_PCEs_ADJUSTED.dta", clear
+
+drop if country11==.
+mi update
+
+global output "S:\CLS_DAC_MCS\DAC-174\data\analyses output\RQ2"
+
+
+
+//SINGLE PCES
+global controls "male i.ETHCM5 AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y i.ACEs11_cat" 
+
+//PCEs
+foreach X of varlist childcareformalAge3 peerslowrisk11 pospeer711 schoolconnect711_high teacherchild11_good activities11_high neighsafe3511 schoolsafe7_safe {
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+
+//RR
+mi estimate, eform dots post: glm `Y' `X' $controls [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_PCEs_single_`Y'.xls", eform stats(coef ci) cttop(RR adjusted) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append keep(`X') nocons
+	
+}		
+}
+
+
+
+
+//CUMULATIVE PCES
+global controls1 "male i.ETHCM5 AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y" 
+global controls2 "male i.ETHCM5 AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y i.ACEs11_cat" 
+
+//PCEs
+foreach X of varlist PCEs7_cat {
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+
+//WHOLE SAMPLE
+
+//margins
+
+mi estimate, esampvaryok post or: logistic `Y' i.`X' $controls1 [pweight=AOVWT1], robust
+mimrgns `X', vce(unconditional) predict(pr) post
+outreg2 using "$output\logistic_`Y'_`X'.xls", ctitle(margins controls1) ci label side noaster append	
+
+mi estimate, esampvaryok post or: logistic `Y' i.`X' $controls2 [pweight=AOVWT1], robust
+mimrgns `X', vce(unconditional) predict(pr) post
+outreg2 using "$output\logistic_`Y'_`X'.xls", ctitle(margins controls2) ci label side noaster append	
+				
+
+//RR
+mi estimate, eform dots post: glm `Y' i.`X' $controls1 [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'.xls", eform stats(coef ci) cttop(RR controls1) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+mi estimate, eform dots post: glm `Y' i.`X' $controls2 [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'.xls", eform stats(coef ci) cttop(RR controls2) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+	
+}		
+}
+
+
+
+
+//GENDER
+global controls1 "i.ETHCM5 AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y" 
+global controls2 "i.ETHCM5 AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y i.ACEs11_cat" 
+
+//ACEs
+foreach X of varlist PCEs7_cat {
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+
+//RR
+mi estimate, eform dots post: glm `Y' i.`X' $controls2 [pweight=AOVWT1] if male==1, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_gender.xls", eform stats(coef ci) cttop(M RR controls2) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+mi estimate, eform dots post: glm `Y' i.`X' $controls2 [pweight=AOVWT1] if male==0, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_gender.xls", eform stats(coef ci) cttop(F RR controls2) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+//INTERACTION 
+mi estimate, eform dots post: glm `Y' i.male##i.`X' $controls2 [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_gender.xls", eform stats(coef ci) cttop(RR adj int) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+//MARGINS
+mi estimate, esampvaryok post or: logistic `Y' i.male#i.`X' $controls2 [pweight=AOVWT1]
+mimrgns male#`X', vce(unconditional) predict(pr) post
+outreg2 using "$output\logistic_`Y'_`X'_gender.xls", ctitle(margins adj) side noaster stats(coef ci) append
+
+}		
+}
+
+
+
+
+
+//ETHNICITY
+global controls1 "male AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y" 
+global controls2 "male AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y i.ACEs11_cat" 
+
+
+foreach X of varlist PCEs7_cat {
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+
+//RR
+mi estimate, eform dots post: glm `Y' i.`X' $controls2 [pweight=AOVWT1] if ethmin==1, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity.xls", eform stats(coef ci) cttop(Minority RR controls2) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+mi estimate, eform dots post: glm `Y' i.`X' $controls2 [pweight=AOVWT1] if ethmin==0, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity.xls", eform stats(coef ci) cttop(White RR controls2) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+//INTERACTION 
+mi estimate, eform dots post: glm `Y' i.ethmin##i.`X' $controls2 [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity.xls", eform stats(coef ci) cttop(RR adj int) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+//MARGINS
+mi estimate, esampvaryok post or: logistic `Y' i.ethmin#i.`X' $controls2 [pweight=AOVWT1]
+mimrgns ethmin#`X', vce(unconditional) predict(pr) post
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity.xls", ctitle(margins adj) side noaster stats(coef ci) append
+
+}		
+}
+
+
+
+//ETHNICITY - categories 
+
+use "$project\YEF_MCSID_analytical_sample_crimevariables_IMD_ACEs_PCEs_ADJUSTED.dta", clear
+
+drop if country11==.
+mi update
+
+drop if ETHCM5==5
+mi update
+
+global output "S:\CLS_DAC_MCS\DAC-174\data\analyses output\RQ2"
+
+global controls1 "male AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y" 
+global controls2 "male AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y i.ACEs11_cat" 
+
+//PCEs
+foreach X of varlist PCEs7_high5plus {
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+
+//RR
+mi estimate, eform dots post esampvaryok: glm `Y' i.`X' $controls2 [pweight=AOVWT1] if ETHCM5==1, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity_cat.xls", eform stats(coef ci) cttop(White RR controls2) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+mi estimate, eform dots post esampvaryok: glm `Y' i.`X' $controls2 [pweight=AOVWT1] if ETHCM5==2, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity_cat.xls", eform stats(coef ci) cttop(Mixed RR controls2) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+mi estimate, eform dots post esampvaryok: glm `Y' i.`X' $controls2 [pweight=AOVWT1] if ETHCM5==3, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity_cat.xls", eform stats(coef ci) cttop(Asian RR controls2) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+mi estimate, eform dots post esampvaryok: glm `Y' i.`X' $controls2 [pweight=AOVWT1] if ETHCM5==4, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity_cat.xls", eform stats(coef ci) cttop(Black RR controls2) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+
+//INTERACTION 
+mi estimate, eform dots post esampvaryok: glm `Y' i.ETHCM5##i.`X' $controls2 [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity_cat.xls", eform stats(coef ci) cttop(RR adj int) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+}		
+}
+
+
+//separate margins analyses
+foreach X of varlist PCEs7_high5plus {
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+
+//MARGINS
+mi estimate, esampvaryok post or: logistic `Y' i.ETHCM5#i.`X' $controls2 [pweight=AOVWT1]
+mimrgns ETHCM5#`X', vce(unconditional) predict(pr) post
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity_cat_margins.xls", ctitle(margins adj) side noaster stats(coef ci) append
+
+}		
+}
+
+
+
+
+*----------------------------------------------------------------------------*
+*** RQ1 and RQ2 robustness checks
+//Mega model (robustness check) for youth violence outcomes that includes, ACEs and PCEs, neighbourhood violence, conduct age 3, and controls including non-cime IMDs
+
+use "$project\YEF_MCSID_analytical_sample_crimevariables_IMD_ACEs_PCEs_ADJUSTED.dta", clear
+
+drop if country11==.
+mi update
+
+global output "S:\CLS_DAC_MCS\DAC-174\data\analyses output\Additional"
+
+global controls "male i.ETHCM5 AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y zIMDinc zIMDemp zIMDhea zIMDedu" 
+
+
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+mi estimate, eform dots post: glm `Y' i.ACEs11_cat i.PCEs7_cat i.rvso_quint conduct2  $controls [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_megamodel.xls", eform stats(coef ci) cttop(RR) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+}
+
+
+
+
+*---------------------------------------------------------------------------*
+
+
+***analyses for RQ1 and RQ2 with non-imputed data
+//just generate RR and don't bother with margins
+//we use the age 17 weight as this is the last data point included
+
+
+use "$project\YEF_MCSID_analytical_sample_crimevariables_IMD_ACEs_PCEs_ADJUSTED.dta", clear
+
+drop if country11==.
+mi update
+
+
+fre assault1417 weapon1417 gangever1417 
+fre male ETHCM5 AGEMB EDUH SECH5 singpa9m_11y PCEs7_cat
+sum income12345_100
+
+
+*missing variable dummies
+foreach X of varlist male ETHCM5 EDUH SECH5 singpa9m_11y PCEs7_cat ACEs11_cat {
+replace `X'=99 if `X'==.	
+}
+
+foreach X of varlist income12345_100 AGEMB {
+cap drop m`X'
+gen m`X'=.
+replace m`X'=1 if `X'==.
+replace m`X'=0 if `X'!=.
+label var m`X' "missing dummy `X'"
+replace `X'=99 if `X'==.
+
+} 
+
+
+global controls2 "i.ACEs11_cat i.PCEs7_cat male i.ETHCM5 AGEMB mAGEMB income12345_100 mincome12345_100 i.EDUH i.SECH5 i.singpa9m_11y " 
+
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+
+//RR
+glm `Y' $controls2 [pweight=GOVWT2], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_unimputed.xls", eform stats(coef ci) cttop(RR controls2) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+	
+}		
+
+
+
+*---------------------------------------------------------------------------*
+
+
+
+
+
+
+
+
+
+**# Bookmark #6
+******************************************************************************
+*----------------------------------------------------------------------------*   
+***** ANALYSES RQ 3*****  
+*** RQ3: Do PCEs moderate effect of ACEs on youth violence
+
+
+*running regression using 5+ ACEs and 0-2 PCEs as baseline.
+use "$project\YEF_MCSID_analytical_sample_crimevariables_IMD_ACEs_PCEs_ADJUSTED.dta", clear
+
+drop if country11==.
+mi update
+
+global output "S:\CLS_DAC_MCS\DAC-174\data\analyses output\RQ3"
+
+global controls "male i.ETHCM5 AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y" 
+
+
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+//RR
+mi estimate, eform dots post: glm `Y' ib5.ACEs11_cat6#i.PCEs7_cat $controls [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\ACEs_X _PCEs_`Y'_v4.xls", eform stats(coef ci) cttop(RR unadjusted) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+}
+
+
+
+
+*** GENDER
+use "$project\YEF_MCSID_analytical_sample_crimevariables_IMD_ACEs_PCEs_ADJUSTED.dta", clear
+
+drop if country11==.
+mi update
+
+global output "S:\CLS_DAC_MCS\DAC-174\data\analyses output\RQ3"
+
+global controls "i.ETHCM5 AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y"
+
+
+foreach Y of varlist assault1417 weapon1417 gangever1417  {
+
+//RR 
+mi estimate, esampvaryok eform dots post: glm `Y' ib1.ACEs11_high3plus#i.PCEs7_high5plus $controls [pweight=AOVWT1] if male==1, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\_`Y'_ACEs_X _PCEs_X_GENDER.xls", eform stats(coef ci) cttop(RR males) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+mi estimate, esampvaryok eform dots post: glm `Y' ib1.ACEs11_high3plus#i.PCEs7_high5plus $controls [pweight=AOVWT1] if male==0, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\_`Y'_ACEs_X _PCEs_X_GENDER.xls", eform stats(coef ci) cttop(RR females) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+// RR interaction
+mi estimate, esampvaryok eform dots post: glm `Y' ib1.ACEs11_high3plus#i.PCEs7_high5plus##i.male $controls [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\_`Y'_ACEs_X _PCEs_X_GENDER.xls", eform stats(coef ci) cttop(RR adjusted) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+//adjusted margins
+mi estimate, esampvaryok post or: logistic `Y' ib1.ACEs11_high3plus#i.PCEs7_high5plus#i.male $controls [pweight=AOVWT1]
+mimrgns ACEs11_high3plus#PCEs7_high5plus#male, vce(unconditional) predict(pr) post
+outreg2 using "$output\_`Y'_ACEs_X _PCEs_X_GENDER.xls", ctitle(margins adj) side noaster stats(coef ci) append
+
+}
+
+
+
+
+***ETHNICITY (binary)
+use "$project\YEF_MCSID_analytical_sample_crimevariables_IMD_ACEs_PCEs_ADJUSTED.dta", clear
+
+drop if country11==.
+mi update
+
+global output "S:\CLS_DAC_MCS\DAC-174\data\analyses output\RQ3"
+
+global controls "male AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y"
+
+
+foreach Y of varlist assault1417 weapon1417 gangever1417  {
+
+//RR 
+mi estimate, esampvaryok eform dots post: glm `Y' ib1.ACEs11_high3plus#i.PCEs7_high5plus $controls [pweight=AOVWT1] if ethmin==1, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\_`Y'_ACEs_X _PCEs_X_ETHNICITY.xls", eform stats(coef ci) cttop(RR minority) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+mi estimate, esampvaryok eform dots post: glm `Y' ib1.ACEs11_high3plus#i.PCEs7_high5plus $controls [pweight=AOVWT1] if ethmin==0, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\_`Y'_ACEs_X _PCEs_X_ETHNICITY.xls", eform stats(coef ci) cttop(RR white) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+// RR interaction
+mi estimate, esampvaryok eform dots post: glm `Y' ib1.ACEs11_high3plus#i.PCEs7_high5plus##i.ethmin $controls [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\_`Y'_ACEs_X _PCEs_X_ETHNICITY.xls", eform stats(coef ci) cttop(RR adjusted) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+//adjusted margins
+mi estimate, esampvaryok post or: logistic `Y' ib1.ACEs11_high3plus#i.PCEs7_high5plus#i.ethmin $controls [pweight=AOVWT1]
+mimrgns ACEs11_high3plus#PCEs7_high5plus#ethmin, vce(unconditional) predict(pr) post
+outreg2 using "$output\_`Y'_ACEs_X _PCEs_X_ETHNICITY.xls", ctitle(margins adj) side noaster stats(coef ci) append
+
+}
+
+
+
+
+
+
+
+*----------------------------------------------------------------------------*
+
+**# Bookmark #5
+
+***** ANALYSES RQ 5*****
+use "$project\YEF_MCSID_analytical_sample_crimevariables_IMD_ACEs_PCEs_ADJUSTED.dta", clear
+
+global output "S:\CLS_DAC_MCS\DAC-174\data\analyses output\RQ5"
+
+global controls "male i.ETHCM5 AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y i.ACEs11_cat i.PCEs7_cat" 
+
+global noncrimeIMD "zIMDinc zIMDemp zIMDhea zIMDedu"
+
+//foreach X in i.rvso_quint i.rcrime_quint i.e_r_imd11_quint i.w_r_imd11_quint i.e_r_cri11_quint i.w_r_cri11_quint i.imd11_quint i.imdcrim11_quint 
+//we only run combined imd measures for Eng and Wal as problems with Wales sample, even when changing to binary ethnicity
+
+
+//ALL ANALYSES QUINTILE PREDICTORS WITH MARGINAL EFFECTS
+foreach X in i.rvso_quint i.rcrime_quint i.imd11_quint i.imdcrim11_quint   {
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+
+//RR
+mi estimate, esampvaryok eform dots post: glm `Y' `X' [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'.xls", eform stats(coef ci) cttop(RR unadjusted) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+mi estimate, esampvaryok eform dots post: glm `Y' `X' $controls [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'.xls", eform stats(coef ci) cttop(RR adjusted) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+mi estimate, esampvaryok eform dots post: glm `Y' `X' $controls $noncrimeIMD [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'.xls", eform stats(coef ci) cttop(RR adjusted) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+
+
+//margins
+mi estimate, esampvaryok post or: logistic `Y' `X' [pweight=AOVWT1], robust
+mimrgns `X', vce(unconditional) predict(pr) post
+outreg2 using "$output\logistic_`Y'_`X'.xls", ctitle(margins unadjusted) ci label side noaster append
+
+mi estimate, esampvaryok post or: logistic `Y' `X' $controls [pweight=AOVWT1], robust
+mimrgns `X', vce(unconditional) predict(pr) post
+outreg2 using "$output\logistic_`Y'_`X'.xls", ctitle(margins adjusted) ci label side noaster append	
+
+mi estimate, esampvaryok post or: logistic `Y' `X' $controls $noncrimeIMD [pweight=AOVWT1], robust
+mimrgns `X', vce(unconditional) predict(pr) post
+outreg2 using "$output\logistic_`Y'_`X'.xls", ctitle(margins adjusted) ci label side noaster append		
+	
+}
+}
+
+
+//ALL ANALYSES CONTINUOUS PREDICTORS WITHOUT MARGINAL EFFECTS AS CAN ONLY GET FOR CATEGORIES
+//note high chance of wales not running properly, but give it a whirl. Correct, problms with Wales, so removing those for now but should try and run in a model with binary ethnicity or try and figure out other problematic variables. Although we probably don't need these analyses anyway, so leave for now and crack on with main ones.
+//Removing:  zRw_r_imd11 zRw_r_cri11
+
+foreach X in zrvso zrcrime zimdcrim11 zimd11 zRe_r_imd11 zRe_r_cri11 {
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+		
+//RR
+mi estimate, esampvaryok eform dots post: glm `Y' `X' [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'.xls", eform stats(coef ci) cttop(RR unadjusted) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+mi estimate, esampvaryok eform dots post: glm `Y' `X' $controls [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'.xls", eform stats(coef ci) cttop(RR adjusted) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+mi estimate, esampvaryok eform dots post: glm `Y' `X' $controls $noncrimeIMD [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'.xls", eform stats(coef ci) cttop(RR adjusted) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+}
+}
+
+
+
+*** RQ5 GENDER AND ETHNICITY
+
+use "$project\YEF_MCSID_analytical_sample_crimevariables_IMD_ACEs_PCEs_ADJUSTED.dta", clear
+
+global output "S:\CLS_DAC_MCS\DAC-174\data\analyses output\RQ5"
+
+
+//GENDER
+global controls2 "i.ETHCM5 AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y i.ACEs11_cat i.PCEs7_cat" 
+
+
+foreach X of varlist rvso_tert {
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+
+//RR
+mi estimate, eform dots post: glm `Y' i.`X' $controls2 [pweight=AOVWT1] if male==1, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_gender.xls", eform stats(coef ci) cttop(M RR controls2) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+mi estimate, eform dots post: glm `Y' i.`X' $controls2 [pweight=AOVWT1] if male==0, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_gender.xls", eform stats(coef ci) cttop(F RR controls2) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+//INTERACTION 
+mi estimate, eform dots post: glm `Y' i.male##i.`X' $controls2 [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_gender.xls", eform stats(coef ci) cttop(RR adj int) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+//MARGINS
+mi estimate, esampvaryok post or: logistic `Y' i.male#i.`X' $controls2 [pweight=AOVWT1]
+mimrgns male#`X', vce(unconditional) predict(pr) post
+outreg2 using "$output\logistic_`Y'_`X'_gender.xls", ctitle(margins adj) side noaster stats(coef ci) append
+
+}		
+}
+
+
+
+
+
+//ETHNICITY
+use "$project\YEF_MCSID_analytical_sample_crimevariables_IMD_ACEs_PCEs_ADJUSTED.dta", clear
+
+global output "S:\CLS_DAC_MCS\DAC-174\data\analyses output\RQ5"
+
+global controls2 "male AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y i.ACEs11_cat i.PCEs7_cat" 
+
+
+foreach X of varlist rvso_tert {
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+
+//RR
+mi estimate, eform dots post: glm `Y' i.`X' $controls2 [pweight=AOVWT1] if ethmin==1, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity.xls", eform stats(coef ci) cttop(Minority RR) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+mi estimate, eform dots post: glm `Y' i.`X' $controls2 [pweight=AOVWT1] if ethmin==0, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity.xls", eform stats(coef ci) cttop(White RR) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+//INTERACTION 
+mi estimate, eform dots post: glm `Y' i.ethmin##i.`X' $controls2 [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity.xls", eform stats(coef ci) cttop(RR adj int) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+//MARGINS
+mi estimate, esampvaryok post or: logistic `Y' i.ethmin#i.`X' $controls2 [pweight=AOVWT1]
+mimrgns ethmin#`X', vce(unconditional) predict(pr) post
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity.xls", ctitle(margins adj) side noaster stats(coef ci) append
+
+}		
+}
+
+
+
+
+***ETHNICITY (categories) ETHCM5
+use "$project\YEF_MCSID_analytical_sample_crimevariables_IMD_ACEs_PCEs_ADJUSTED.dta", clear
+
+drop if country11==.
+mi update
+
+drop if ETHCM5==5
+mi update
+
+global output "S:\CLS_DAC_MCS\DAC-174\data\analyses output\RQ5"
+
+global controls2 "male AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y i.ACEs11_cat i.PCEs7_cat" 
+
+
+foreach X of varlist rvso_tert {
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+
+//RR
+mi estimate, eform dots post: glm `Y' i.`X' $controls2 [pweight=AOVWT1] if ETHCM5==1, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity_cat.xls", eform stats(coef ci) cttop(White RR) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+mi estimate, eform dots post: glm `Y' i.`X' $controls2 [pweight=AOVWT1] if ETHCM5==2, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity_cat.xls", eform stats(coef ci) cttop(Mixed RR) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+mi estimate, eform dots post: glm `Y' i.`X' $controls2 [pweight=AOVWT1] if ETHCM5==3, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity_cat.xls", eform stats(coef ci) cttop(Asian RR) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+mi estimate, eform dots post: glm `Y' i.`X' $controls2 [pweight=AOVWT1] if ETHCM5==4, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity_cat.xls", eform stats(coef ci) cttop(Black RR) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+//INTERACTION 
+mi estimate, eform dots post: glm `Y' i.ETHCM5##i.`X' $controls2 [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity_cat.xls", eform stats(coef ci) cttop(RR adj int) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+//MARGINS
+mi estimate, esampvaryok post or: logistic `Y' i.ETHCM5#i.`X' $controls2 [pweight=AOVWT1]
+mimrgns ETHCM5#`X', vce(unconditional) predict(pr) post
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity_cat.xls", ctitle(margins adj) side noaster stats(coef ci) append
+
+}		
+}
+
+
+
+//dropping black ethnic group as well for gang involvement due to non-sensical results for this outcome
+
+use "$project\YEF_MCSID_analytical_sample_crimevariables_IMD_ACEs_PCEs_ADJUSTED.dta", clear
+
+drop if ETHCM5==4
+drop if ETHCM5==5
+mi update
+
+global output "S:\CLS_DAC_MCS\DAC-174\data\analyses output\RQ5"
+
+global controls2 "male AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y i.ACEs11_cat i.PCEs7_cat" 
+
+
+foreach X of varlist rvso_tert {
+foreach Y of varlist gangever1417 {
+
+//RR
+mi estimate, eform dots post: glm `Y' i.`X' $controls2 [pweight=AOVWT1] if ETHCM5==1, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity_cat.xls", eform stats(coef ci) cttop(White RR) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+mi estimate, eform dots post: glm `Y' i.`X' $controls2 [pweight=AOVWT1] if ETHCM5==2, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity_cat.xls", eform stats(coef ci) cttop(Mixed RR) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+mi estimate, eform dots post: glm `Y' i.`X' $controls2 [pweight=AOVWT1] if ETHCM5==3, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity_cat.xls", eform stats(coef ci) cttop(Asian RR) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+
+//INTERACTION 
+mi estimate, eform dots post: glm `Y' i.ETHCM5##i.`X' $controls2 [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity_cat.xls", eform stats(coef ci) cttop(RR adj int) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+//MARGINS
+mi estimate, esampvaryok post or: logistic `Y' i.ETHCM5#i.`X' $controls2 [pweight=AOVWT1]
+mimrgns ETHCM5#`X', vce(unconditional) predict(pr) post
+outreg2 using "$output\logistic_`Y'_`X'_ethnicity_cat.xls", ctitle(margins adj) side noaster stats(coef ci) append
+
+}		
+}
+
+
+
+
+*---------------------------------------------------------------------------*
+
+
+***analyses for RQ5 with non-imputed data
+//just generate RR and don't bother with margins
+//we use the age 17 weight as this is the last data point included
+
+
+use "$project\YEF_MCSID_analytical_sample_crimevariables_IMD_ACEs_PCEs_ADJUSTED.dta", clear
+
+drop if country11==.
+mi update
+
+global output "S:\CLS_DAC_MCS\DAC-174\data\analyses output\RQ5"
+
+global controls "male i.ETHCM5 AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y i.ACEs11_cat i.PCEs7_cat" 
+
+*missing variable dummies
+foreach X of varlist male ETHCM5 EDUH SECH5 singpa9m_11y PCEs7_cat ACEs11_cat rvso_quint {
+replace `X'=99 if `X'==.	
+}
+
+foreach X of varlist income12345_100 AGEMB {
+cap drop m`X'
+gen m`X'=.
+replace m`X'=1 if `X'==.
+replace m`X'=0 if `X'!=.
+label var m`X' "missing dummy `X'"
+replace `X'=99 if `X'==.
+
+} 
+
+
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+
+//RR
+
+glm `Y' i.rvso_quint [pweight=GOVWT2], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_nonimputed.xls", eform stats(coef ci) cttop(RR adjusted) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+glm `Y' i.rvso_quint  $controls [pweight=GOVWT2], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_nonimputed.xls", eform stats(coef ci) cttop(RR adjusted) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+	
+}
+
+
+
+*---------------------------------------------------------------------------*
+
+
+
+
+
+
+
+
+
+
+
+**# Bookmark #6
+******************************************************************************
+*----------------------------------------------------------------------------*   
+***** ANALYSES RQ 6*****   
+//Results research question 6: Does the association between ACEs and youth violence differ for those in neighbourhoods with high versus low levels of violent crime?   
+   
+use "$project\YEF_MCSID_analytical_sample_crimevariables_IMD_ACEs_PCEs_ADJUSTED.dta", clear
+
+global output "S:\CLS_DAC_MCS\DAC-174\data\analyses output\RQ6"
+global controls "male i.ETHCM5 AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y i.PCEs7_cat" 
+
+
+
+//1.binary ACES and tertile violent crime (main analyses)
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+foreach M of varlist rvso_tert	{
+foreach X of varlist ACEs11_high3plus {	
+
+//RR
+mi estimate, eform dots post: glm `Y' i.`X' $controls [pweight=AOVWT1] if `M'==0, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\_`Y'_ACEsbin_by_`M'.xls", eform stats(coef ci) cttop(RR adj) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+mi estimate, eform dots post: glm `Y' i.`X' $controls [pweight=AOVWT1] if `M'==1, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\_`Y'_ACEsbin_by_`M'.xls", eform stats(coef ci) cttop(RR adj) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+mi estimate, eform dots post: glm `Y' i.`X' $controls [pweight=AOVWT1] if `M'==2, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\_`Y'_ACEsbin_by_`M'.xls", eform stats(coef ci) cttop(RR adj) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+//INTERACTION 
+mi estimate, eform dots post: glm `Y' i.`M'##i.`X' $controls [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\_`Y'_ACEsbin_by_`M'.xls", eform stats(coef ci) cttop(RR adj int) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+//MARGINS
+mi estimate, esampvaryok post or: logistic `Y' i.`M'#i.`X' $controls [pweight=AOVWT1]
+mimrgns `M'#`X', vce(unconditional) predict(pr) post
+outreg2 using "$output\_`Y'_ACEsbin_by_`M'.xls", ctitle(margins adj) side noaster stats(coef ci) append
+}
+}
+}
+
+
+//2.binary ACEs and continuous violent crime (additional)
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+foreach M of varlist zrvso	{
+foreach X of varlist ACEs11_high3plus {	
+
+//INTERACTION 
+mi estimate, eform dots post: glm `Y' c.`M'##i.`X' $controls [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\_`Y'_ACEsbin_by_`M'.xls", eform stats(coef ci) cttop(RR adj int) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+}
+}
+}
+
+//2.1 full ACEs and continuous violent crime (additional analyses)
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+foreach M of varlist zrvso	{
+foreach X of varlist ACEs11_cat6 {	
+
+//INTERACTION 
+mi estimate, eform dots post: glm `Y' c.`M'##i.`X' $controls [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\_`Y'_ACEsfull_by_`M'.xls", eform stats(coef ci) cttop(RR adj int) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+}
+}
+}
+
+
+
+//4.full ACEs and tertile violence (additional analyses)
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+foreach M of varlist rvso_tert	{
+foreach X of varlist ACEs11_cat6 {	
+
+//RR
+mi estimate, esampvaryok eform dots post: glm `Y' i.`X' $controls [pweight=AOVWT1] if `M'==0, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\_`Y'_ACEsfull_by_`M'.xls", eform stats(coef ci) cttop(RR adj) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+mi estimate, esampvaryok eform dots post: glm `Y' i.`X' $controls [pweight=AOVWT1] if `M'==1, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\_`Y'_ACEsfull_by_`M'.xls", eform stats(coef ci) cttop(RR adj) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+mi estimate, esampvaryok eform dots post: glm `Y' i.`X' $controls [pweight=AOVWT1] if `M'==2, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\_`Y'_ACEsfull_by_`M'.xls", eform stats(coef ci) cttop(RR adj) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+//INTERACTION 
+mi estimate, esampvaryok eform dots post: glm `Y' i.`M'##i.`X' $controls [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\_`Y'_ACEsfull_by_`M'.xls", eform stats(coef ci) cttop(RR adj int) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+//MARGINS
+mi estimate, esampvaryok post or: logistic `Y' i.`M'#i.`X' $controls [pweight=AOVWT1]
+mimrgns `M'#`X', vce(unconditional) predict(pr) post
+outreg2 using "$output\_`Y'_ACEsfull_by_`M'.xls", ctitle(margins adj) side noaster stats(coef ci) append
+
+}
+}
+}
+
+
+
+
+
+
+**# Bookmark #7
+******************************************************************************
+*----------------------------------------------------------------------------*   
+***** ANALYSES RQ 7*****   
+//Results research question 7: Does the association between PCEs and youth violence differ for those in neighbourhoods with high versus low levels of violent crime?
+
+use "$project\YEF_MCSID_analytical_sample_crimevariables_IMD_ACEs_PCEs_ADJUSTED.dta", clear
+
+global output "S:\CLS_DAC_MCS\DAC-174\data\analyses output\RQ7"
+global controls "male i.ETHCM5 AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y i.ACEs11_cat" 
+global noncrimeIMD "zIMDinc zIMDemp zIMDhea zIMDedu"
+
+
+
+//1.binary PCES and tertile violent crime (main analyses)
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+foreach M of varlist rvso_tert 	{
+foreach X of varlist PCEs7_high5plus {		
+
+//RR
+mi estimate, eform dots post: glm `Y' i.`X' $controls [pweight=AOVWT1] if `M'==0, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\_`Y'_PCEsbin_by_`M'.xls", eform stats(coef ci) cttop(RR adj) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+mi estimate, eform dots post: glm `Y' i.`X' $controls [pweight=AOVWT1] if `M'==1, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\_`Y'_PCEsbin_by_`M'.xls", eform stats(coef ci) cttop(RR adj) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+mi estimate, eform dots post: glm `Y' i.`X' $controls [pweight=AOVWT1] if `M'==2, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\_`Y'_PCEsbin_by_`M'.xls", eform stats(coef ci) cttop(RR adj) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+//INTERACTION 
+mi estimate, eform dots post: glm `Y' i.`M'##i.`X' $controls [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\_`Y'_PCEsbin_by_`M'.xls", eform stats(coef ci) cttop(RR adj int) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+//MARGINS
+mi estimate, esampvaryok post or: logistic `Y' i.`M'#ib1.`X' $controls [pweight=AOVWT1]
+mimrgns `M'#`X', vce(unconditional) predict(pr) post
+outreg2 using "$output\_`Y'_PCEsbin_by_`M'.xls", ctitle(margins adj) side noaster stats(coef ci) append
+}
+}
+}
+
+
+//2.binary PCEs and continuous violent crime
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+foreach M of varlist zrvso	{
+foreach X of varlist PCEs7_high5plus {	
+
+//INTERACTION 
+mi estimate, eform dots post: glm `Y' c.`M'##i.`X' $controls [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\_`Y'_PCEsbin_by_`M'.xls", eform stats(coef ci) cttop(RR adj int) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+}
+}
+}
+
+//2.1 full PCEs and continuous violent crime
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+foreach M of varlist zrvso	{
+foreach X of varlist PCEs7_cat {	
+
+//INTERACTION 
+mi estimate, eform dots post: glm `Y' c.`M'##i.`X' $controls [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\_`Y'_PCEsfull_by_`M'.xls", eform stats(coef ci) cttop(RR adj int) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+}
+}
+}
+
+
+
+
+
+//4.full PCEs and tertile violence (additional analyses)
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+foreach M of varlist rvso_tert {
+foreach X of varlist PCEs7_cat {	
+
+//RR
+mi estimate, esampvaryok eform dots post: glm `Y' i.`X' $controls [pweight=AOVWT1] if `M'==0, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\_`Y'_PCEsfull_by_`M'.xls", eform stats(coef ci) cttop(RR adj) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+mi estimate, esampvaryok eform dots post: glm `Y' i.`X' $controls [pweight=AOVWT1] if `M'==1, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\_`Y'_PCEsfull_by_`M'.xls", eform stats(coef ci) cttop(RR adj) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+mi estimate, esampvaryok eform dots post: glm `Y' i.`X' $controls [pweight=AOVWT1] if `M'==2, fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\_`Y'_PCEsfull_by_`M'.xls", eform stats(coef ci) cttop(RR adj) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+//INTERACTION 
+mi estimate, esampvaryok eform dots post: glm `Y' i.`M'##i.`X' $controls [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\_`Y'_PCEsfull_by_`M'.xls", eform stats(coef ci) cttop(RR adj int) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+//MARGINS
+mi estimate, esampvaryok post or: logistic `Y' i.`M'#i.`X' $controls [pweight=AOVWT1]
+mimrgns `M'#`X', vce(unconditional) predict(pr) post
+outreg2 using "$output\_`Y'_PCEsfull_by_`M'.xls", ctitle(margins adj) side noaster stats(coef ci) append
+
+}
+}
+}
+
+
+
+
+
+**# Bookmark #8
+******************************************************************************
+*----------------------------------------------------------------------------*   
+***** ANALYSES RQ 8*****   
+//Results research question 8: Do PCEs attenuate the association between ACEs and youth violence more in low-crime areas or in high-crime areas?
+
+use "$project\YEF_MCSID_analytical_sample_crimevariables_IMD_ACEs_PCEs_ADJUSTED.dta", clear
+
+global output "S:\CLS_DAC_MCS\DAC-174\data\analyses output\RQ8"
+
+global controls "male i.ethmin AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y"
+//note changed to ethnic minority as seems to be culprit in models not running
+
+
+//This has less information as we use threholds for high ACEs and high PCEs that are just above the average level for each.
+
+***** 1 Tertile neighbourhood and Binary ACEs and PCEs
+
+*New model (without if specification)
+foreach Y of varlist assault1417 weapon1417 gangever1417  {
+
+//RR 
+mi estimate, esampvaryok eform dots post: glm `Y' ib1.ACEs11_high3plus#i.PCEs7_high5plus#ib2.rvso_tert $controls [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\_`Y'_ACEs_X _PCEs_X_rvso_tert.xls", eform stats(coef ci) cttop(RR adj low ) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+//adjusted margins
+mi estimate, esampvaryok post or: logistic `Y' ib1.ACEs11_high3plus#i.PCEs7_high5plus#ib2.rvso_tert $controls [pweight=AOVWT1]
+mimrgns ACEs11_high3plus#PCEs7_high5plus#rvso_tert, vce(unconditional) predict(pr) post
+outreg2 using "$output\_`Y'_ACEs_X _PCEs_X_rvso_tert.xls", ctitle(margins adj) side noaster stats(coef ci) append
+
+}
+
+*new interaction model v2
+foreach Y of varlist assault1417 weapon1417 gangever1417  {
+// RR interaction
+mi estimate, esampvaryok eform dots post: glm `Y' ib1.ACEs11_high3plus#i.PCEs7_high5plus##i.rvso_tert $controls [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\_`Y'_ACEs_X _PCEs_X_rvso_tert_int_new.xls", eform stats(coef ci) cttop(RR adjusted) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+}
+
+
+
+
+
+**# Bookmark #9
+******************************************************************************
+*----------------------------------------------------------------------------*   
+***** ANALYSES RQ 9*****   
+//Results research question 9: Do ACEs amplify the association between neighbourhood violent crime and youth violence?
+
+use "$project\YEF_MCSID_analytical_sample_crimevariables_IMD_ACEs_PCEs_ADJUSTED.dta", clear
+
+drop if country11==.
+mi update
+
+global output "S:\CLS_DAC_MCS\DAC-174\data\analyses output\RQ9"
+
+global controls "male i.ethmin AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y i.PCEs7_cat" 
+
+
+
+//ACEs11_high3plus (binary)
+foreach X in i.rvso_quint  {
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+
+//RR
+mi estimate, esampvaryok eform dots post: glm `Y' `X'#i.ACEs11_high3plus $controls  [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'.xls", eform stats(coef ci) cttop(RR adj 0 ACEs) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+
+//margins
+mi estimate, esampvaryok post or: logistic `Y' `X'#i.ACEs11_high3plus $controls [pweight=AOVWT1]
+mimrgns `X'#ACEs11_high3plus, vce(unconditional) predict(pr) post
+outreg2 using "$output\logistic_`Y'_`X'.xls", ctitle(margins adj 0 ACEs) ci label side noaster append	
+
+}
+}
+
+
+*interaction model
+foreach X in i.rvso_quint  {
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+
+//RR
+mi estimate, esampvaryok eform dots post: glm `Y' `X'##i.ACEs11_high3plus $controls  [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_int.xls", eform stats(coef ci) cttop(RR adj 0 ACEs) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+}
+}
+
+
+
+
+
+
+
+
+**# Bookmark #10
+******************************************************************************
+*----------------------------------------------------------------------------*   
+***** ANALYSES RQ 10*****  
+//Results research question 10: Do PCEs attenuate the association between neighbourhood violent crime and youth violence?
+
+use "$project\YEF_MCSID_analytical_sample_crimevariables_IMD_ACEs_PCEs_ADJUSTED.dta", clear
+
+global output "S:\CLS_DAC_MCS\DAC-174\data\analyses output\RQ10"
+
+global controls "male i.ethmin AGEMB income12345_100 i.EDUH i.SECH5 i.singpa9m_11y i.ACEs11_cat" 
+
+
+
+//PCEs7_high5plus
+foreach X in i.rvso_quint  {
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+
+//RR
+mi estimate, esampvaryok eform dots post: glm `Y' `X'#i.PCEs7_high5plus $controls  [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'.xls", eform stats(coef ci) cttop(RR adj 0 ACEs) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+//margins
+mi estimate, esampvaryok post or: logistic `Y' `X'#i.PCEs7_high5plus $controls [pweight=AOVWT1]
+mimrgns `X'#PCEs7_high5plus, vce(unconditional) predict(pr) post
+outreg2 using "$output\logistic_`Y'_`X'.xls", ctitle(margins adj 0 ACEs) ci label side noaster append	
+
+}
+}
+
+
+*interaction model
+foreach X in i.rvso_quint  {
+foreach Y of varlist assault1417 weapon1417 gangever1417 {
+
+//RR
+mi estimate, esampvaryok eform dots post: glm `Y' `X'##i.PCEs7_high5plus $controls  [pweight=AOVWT1], fam(poisson) link(log) nolog vce(robust)
+outreg2 using "$output\logistic_`Y'_`X'_int.xls", eform stats(coef ci) cttop(RR adj 0 ACEs) dec(2) side alpha(.001, .01, .05, .10) symbol(***, **, *, +) label append
+
+}
+}
